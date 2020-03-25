@@ -1,0 +1,68 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: manz-link
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ap-southeast-2
+  stage: ${opt:stage, self:custom.stage}
+  profile: manz-amplify
+  environment: 
+    STAGE: ${self:provider.stage}
+    DYNAMODB_TABLE_NAME: ${self:service}-res-${opt:stage, self:provider.stage}
+    REGION: ${self:provider.region}
+    SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_NAME}"
+
+custom:
+  stage: dev
+
+plugins:
+  - serverless-offline
+
+functions:
+  response:
+    handler: handler.response
+    events:
+      - http:
+          path: ivr/response
+          method: post
+
+resources: 
+  Resources:
+    MANZLinkResponsesTable: 
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH

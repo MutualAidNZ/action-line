@@ -1,0 +1,19 @@
+{
+  "name": "manz-link",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "dynogels": "^9.1.0",
+    "joi": "^14.3.1"
+  },
+  "devDependencies": {
+    "serverless-offline": "^6.0.0"
+  }
+}
