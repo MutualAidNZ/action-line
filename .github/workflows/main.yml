@@ -9,10 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: npm ci
-      uses: actions/npm@master
+    - uses: actions/setup-node@v1
       with:
-        args: ci
+        node-version: '10.x'
+    - run: npm ci
+    - run: npm test
     - name: serverless deploy
       uses: serverless/github-action@master
       with:
