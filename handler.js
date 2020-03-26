@@ -1,21 +1,6 @@
-const dynogels = require('dynogels');
-const axios = require('axios');
-
-const Response = require('./models/Response');
-
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
-
-dynogels.AWS.config.update({ region: process.env.REGION });
-
-async function updateSession(values) {
-  console.log(`Updating response for session ${values.id}...`, values);
-
-  return new Promise((resolve, reject) => {
-    Response.update(values, (err, result) => {
-      return err ? reject(err) : resolve(result);
-    });
-  });
-}
+const { geocode } = require('./lib/here');
+const { updateResponse } = require('./lib/response');
+const { createTask } = require('./lib/clickup');
 
 module.exports.response = async event => {
   const body = JSON.parse(event.body);
@@ -28,6 +13,8 @@ module.exports.response = async event => {
   }
 
   let response;
+
+  // TODO: Validate incoming requests
   if (!body.responseId) {
     response = {
       id: body.id,
@@ -51,58 +38,36 @@ module.exports.response = async event => {
       requirements: body.queryResult.parameters.Requirements.join(', ')
     };
   }
+  
+  const { city, street, county, state } = await geocode(response.postcode);
+
+  if (!city) {
+    console.error('Unable to parse city from postcode');
+    // TODO: Post into bad data triage
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ code: 'NO_POSTCODE' })
+    };
+  }
+
+  // Populate the response object with the geocode result
+  response = {
+    city,
+    street,
+    county,
+    state,
+    ...response
+  }
 
   try {
-    // Write to Dynamo
-    await updateSession({
-      ...response,
-      status: 'Submitted'
-    });
-
-    // Notify Slack channel
-    await axios.post(SLACK_WEBHOOK_URL, {
-      username: 'ActionLineBot',
-      text: `Incoming Action Line request. Please reply on the thread if you are dealing with this request.`,
-      attachments: [
-        {
-          fallback: 'Incoming Action Line Request',
-          pretext: 'Incoming Action Line Request:',
-          color: '#D00000',
-          fields: [
-            {
-              title: 'Name',
-              value: response.name,
-              short: false
-            },
-            {
-              title: 'Phone Number',
-              value: response.number,
-              short: false
-            },
-            {
-              title: 'Postcode',
-              value: response.postcode,
-              short: false
-            },
-            {
-              title: 'Self isolating?',
-              value: response.selfIsolating
-            },
-            {
-              title: 'Requirements',
-              value: response.requirements
-            }
-          ]
-        }
-      ]
-    });
+    await createTask(response);
 
     return {
       statusCode: 200,
       body: JSON.stringify({ status: 'updated' })
     };
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: e })

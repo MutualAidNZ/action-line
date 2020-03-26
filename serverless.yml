@@ -23,11 +23,13 @@ provider:
   region: ap-southeast-2
   stage: ${opt:stage, self:custom.stage}
   profile: manz-amplify
-  environment: 
+  environment:
     STAGE: ${self:provider.stage}
     DYNAMODB_TABLE_NAME: ${self:service}-res-${opt:stage, self:provider.stage}
     REGION: ${self:provider.region}
     SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
+    HERE_API_KEY: ${env:HERE_API_KEY}
+    CLICKUP_API_KEY: ${env:CLICKUP_API_KEY}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -37,7 +39,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_NAME}"
+      Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_NAME}'
 
 custom:
   stage: dev
@@ -53,16 +55,16 @@ functions:
           path: ivr/response
           method: post
 
-resources: 
-  Resources:
-    MANZLinkResponsesTable: 
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.DYNAMODB_TABLE_NAME}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
+# resources:
+#   Resources:
+#     MANZLinkResponsesTable:
+#       Type: AWS::DynamoDB::Table
+#       Properties:
+#         TableName: ${self:provider.environment.DYNAMODB_TABLE_NAME}
+#         BillingMode: PAY_PER_REQUEST
+#         AttributeDefinitions:
+#           - AttributeName: id
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: id
+#             KeyType: HASH
