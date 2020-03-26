@@ -54,17 +54,3 @@ functions:
       - http:
           path: ivr/response
           method: post
-
-# resources:
-#   Resources:
-#     MANZLinkResponsesTable:
-#       Type: AWS::DynamoDB::Table
-#       Properties:
-#         TableName: ${self:provider.environment.DYNAMODB_TABLE_NAME}
-#         BillingMode: PAY_PER_REQUEST
-#         AttributeDefinitions:
-#           - AttributeName: id
-#             AttributeType: S
-#         KeySchema:
-#           - AttributeName: id
-#             KeyType: HASH

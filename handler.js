@@ -1,6 +1,5 @@
 const { geocode } = require('./lib/here');
-const { updateResponse } = require('./lib/response');
-const { createTask } = require('./lib/clickup');
+const { createTask, DEFAULT_LIST_ID } = require('./lib/clickup');
 
 module.exports.response = async event => {
   const body = JSON.parse(event.body);
@@ -43,7 +42,9 @@ module.exports.response = async event => {
 
   if (!city) {
     console.error('Unable to parse city from postcode');
-    // TODO: Post into bad data triage
+    
+    await createTask(response, DEFAULT_LIST_ID);
+
     return {
       statusCode: 400,
       body: JSON.stringify({ code: 'NO_POSTCODE' })
@@ -60,6 +61,7 @@ module.exports.response = async event => {
   }
 
   try {
+    // TODO: Seperate this to an SQS queue handler
     await createTask(response);
 
     return {
