@@ -27,19 +27,10 @@ provider:
     STAGE: ${self:provider.stage}
     DYNAMODB_TABLE_NAME: ${self:service}-res-${opt:stage, self:provider.stage}
     REGION: ${self:provider.region}
-    SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
-    HERE_API_KEY: ${env:HERE_API_KEY}
-    CLICKUP_API_KEY: ${env:CLICKUP_API_KEY}
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_NAME}'
+    AROHA_BASE_URL: ${env:AROHA_BASE_URL}
+    AROHA_TOKEN_URL: ${env:AROHA_TOKEN_URL}
+    AROHA_CLIENT_ID: ${env:AROHA_CLIENT_ID}
+    AROHA_CLIENT_SECRET: ${env:AROHA_CLIENT_SECRET}
 
 custom:
   stage: dev

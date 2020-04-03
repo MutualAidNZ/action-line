@@ -1,5 +1,4 @@
-const { geocode } = require('./lib/here');
-const { createTask, DEFAULT_LIST_ID } = require('./lib/clickup');
+const { createRequest } = require('./lib/aroha');
 
 module.exports.response = async event => {
   const body = JSON.parse(event.body);
@@ -37,32 +36,10 @@ module.exports.response = async event => {
       requirements: body.queryResult.parameters.Requirements.join(', ')
     };
   }
-  
-  const { city, street, county, state } = await geocode(response.postcode);
-
-  if (!city) {
-    console.error('Unable to parse city from postcode');
-    
-    await createTask(response, DEFAULT_LIST_ID);
-
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ code: 'NO_POSTCODE' })
-    };
-  }
-
-  // Populate the response object with the geocode result
-  response = {
-    city,
-    street,
-    county,
-    state,
-    ...response
-  }
 
   try {
     // TODO: Seperate this to an SQS queue handler
-    await createTask(response);
+    await createRequest(response);
 
     return {
       statusCode: 200,
